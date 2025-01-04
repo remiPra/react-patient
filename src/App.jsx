@@ -3,6 +3,7 @@ import Navbar from './components/NavBar'
 import Home from './pages/Home';
 import PatientDetails from './pages/PatientDetails';
 import NewPatient from './pages/NewPatient';
+import SearchPatient from './pages/SearchPatient';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <div className="container mx-auto px-4 py-8">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/search" element={<SearchPatient />} />
             <Route path="/patient/new" element={<NewPatient />} />
             <Route path="/patient/:id" element={<PatientDetails />} />
           </Routes>
