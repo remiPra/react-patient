@@ -12,6 +12,8 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../config/firebase';
 import VoiceRecorder from '../components/VoiceRecorder';
+import WhatsAppButton from '../components/WhatsAppButton';
+
 
 function ImageModal({ imageUrl, onClose }) {
     useEffect(() => {
@@ -95,6 +97,11 @@ function PatientDetails() {
 
         fetchPatientAndConsultations();
     }, [id]);
+
+    const goToPathologyAnalysis = () => {
+        navigate(`/pathology/${id}`);
+    };
+
 
     const handleUpdatePatient = async () => {
         try {
@@ -348,6 +355,21 @@ function PatientDetails() {
                                 {patient.prenom} {patient.nom}
                             </h1>
                             <div className="space-x-2">
+                                 {/* Ajouter ce nouveau bouton */}
+                        <button
+                            onClick={goToPathologyAnalysis}
+                            className="px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600"
+                        >
+                            Analyse Pathologique
+                        </button>
+                        <button
+        onClick={() => window.location.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${patient.email}&su=Suivi Medical`}
+        className="px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600"
+    >
+        Envoyer un email
+    </button>
+    <WhatsAppButton phoneNumber={patient.telephone} />
+
                                 <button
                                     onClick={() => setIsEditing(true)}
                                     className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
