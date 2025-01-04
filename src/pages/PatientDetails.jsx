@@ -15,6 +15,16 @@ import VoiceRecorder from '../components/VoiceRecorder';
 import WhatsAppButton from '../components/WhatsAppButton';
 
 
+//icons
+import { FaCloudUploadAlt } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEye, FaPlus } from 'react-icons/fa';
+import { FaFlask, FaEnvelope } from 'react-icons/fa';
+import { GiPathDistance } from 'react-icons/gi';
+import { AiFillExperiment } from 'react-icons/ai';
+
+
+
+
 function ImageModal({ imageUrl, onClose }) {
     useEffect(() => {
         const handleEsc = (e) => {
@@ -46,6 +56,92 @@ function ImageModal({ imageUrl, onClose }) {
         </div>
     );
 }
+
+const UploadZone = ({ onUploadComplete }) => {
+    const [files, setFiles] = useState([]);
+    const [isDragging, setIsDragging] = useState(false);
+
+    useEffect(() => {
+        const handlePaste = async (e) => {
+            const items = e.clipboardData?.items;
+
+            if (items) {
+                for (let item of items) {
+                    if (item.type.indexOf('image') !== -1) {
+                        const file = item.getAsFile();
+                        if (file) {
+                            try {
+                                const fileArray = [file];
+                                if (onUploadComplete) {
+                                    onUploadComplete(fileArray);
+                                }
+                            } catch (err) {
+                                console.error('Erreur lors du collage:', err);
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        document.addEventListener('paste', handlePaste);
+        return () => document.removeEventListener('paste', handlePaste);
+    }, [onUploadComplete]);
+
+    const handleDrag = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === "dragenter" || e.type === "dragover") {
+            setIsDragging(true);
+        } else if (e.type === "dragleave") {
+            setIsDragging(false);
+        }
+    };
+
+    const handleDrop = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+
+        const uploadedFiles = Array.from(e.dataTransfer.files);
+        if (onUploadComplete) {
+            onUploadComplete(uploadedFiles);
+        }
+    };
+
+    const handleFileChange = (e) => {
+        const uploadedFiles = Array.from(e.target.files);
+        if (onUploadComplete) {
+            onUploadComplete(uploadedFiles);
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <div
+                className={`relative flex flex-col items-center justify-center w-full h-48 p-6 
+            border-2 border-dashed rounded-lg transition-all cursor-pointer
+            ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-500 hover:bg-gray-50'}`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+            >
+                <FaCloudUploadAlt className="w-12 h-12 text-gray-400" />
+                <p className="mt-2 text-sm text-gray-600">
+                    Glissez vos photos ici, collez (Ctrl+V) ou cliquez pour sélectionner
+                </p>
+                <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+            </div>
+        </div>
+    );
+};
 
 function PatientDetails() {
     const { id } = useParams();
@@ -355,32 +451,36 @@ function PatientDetails() {
                                 {patient.prenom} {patient.nom}
                             </h1>
                             <div className="space-x-2">
-                                 {/* Ajouter ce nouveau bouton */}
-                        <button
-                            onClick={goToPathologyAnalysis}
-                            className="px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600"
-                        >
-                            Analyse Pathologique
-                        </button>
-                        <button
-        onClick={() => window.location.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${patient.email}&su=Suivi Medical`}
-        className="px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600"
-    >
-        Envoyer un email
-    </button>
-    <WhatsAppButton phoneNumber={patient.telephone} />
+                                {/* Ajouter ce nouveau bouton */}
+                                <button
+                                    onClick={goToPathologyAnalysis}
+                                    className="px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600"
+                                >
+                                    <AiFillExperiment size={20} />
+
+                                </button>
+                                <button
+                                    onClick={() => window.location.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${patient.email}&su=Suivi Medical`}
+                                    className="px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600"
+                                >
+                                    <FaEnvelope size={20} />
+
+                                </button>
+                                <WhatsAppButton phoneNumber={patient.telephone} />
 
                                 <button
                                     onClick={() => setIsEditing(true)}
                                     className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
                                 >
-                                    Modifier
+                                    <FaEdit size={20} />
+
                                 </button>
                                 <button
                                     onClick={handleDeletePatient}
                                     className="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600"
                                 >
-                                    Supprimer
+                                    <FaTrash size={20} />
+
                                 </button>
                             </div>
                         </div>
@@ -444,12 +544,24 @@ function PatientDetails() {
                         </div>
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Ajouter des photos</label>
-                            <input
-                                type="file"
-                                multiple
-                                onChange={handleFileChange}
-                                className="w-full"
-                                accept="image/*"
+                            <UploadZone
+                                onUploadComplete={async (files) => {
+                                    try {
+                                        const uploadPromises = files.map(async (file) => {
+                                            const storageRef = ref(storage, `consultations/${id}/${Date.now()}-${file.name}`);
+                                            const snapshot = await uploadBytes(storageRef, file);
+                                            return getDownloadURL(snapshot.ref);
+                                        });
+
+                                        const urls = await Promise.all(uploadPromises);
+                                        setNewConsultation(prev => ({
+                                            ...prev,
+                                            photos: [...prev.photos, ...urls]
+                                        }));
+                                    } catch (err) {
+                                        setError('Erreur lors du téléchargement des photos: ' + err.message);
+                                    }
+                                }}
                             />
                             {newConsultation.photos.length > 0 && (
                                 <div className="grid grid-cols-3 gap-4 mt-2">
@@ -558,12 +670,25 @@ function PatientDetails() {
                                                 </div>
                                             ))}
                                         </div>
-                                        <input
-                                            type="file"
-                                            multiple
-                                            onChange={handleFileChange}
-                                            className="w-full"
-                                            accept="image/*"
+
+                                        <UploadZone
+                                            onUploadComplete={async (files) => {
+                                                try {
+                                                    const uploadPromises = files.map(async (file) => {
+                                                        const storageRef = ref(storage, `consultations/${id}/${Date.now()}-${file.name}`);
+                                                        const snapshot = await uploadBytes(storageRef, file);
+                                                        return getDownloadURL(snapshot.ref);
+                                                    });
+
+                                                    const urls = await Promise.all(uploadPromises);
+                                                    setEditingConsultation(prev => ({
+                                                        ...prev,
+                                                        photos: [...prev.photos, ...urls]
+                                                    }));
+                                                } catch (err) {
+                                                    setError('Erreur lors du téléchargement des photos: ' + err.message);
+                                                }
+                                            }}
                                         />
                                     </div>
                                     <div className="flex justify-end space-x-4">
@@ -593,18 +718,18 @@ function PatientDetails() {
                                         <h3 className="text-lg font-semibold">
                                             Consultation du {new Date(consultation.date).toLocaleDateString()}
                                         </h3>
-                                        <div className="space-x-2">
+                                        <div className="space-x-4">
                                             <button
                                                 onClick={() => setEditingConsultation(consultation)}
-                                                className="text-blue-500 hover:text-blue-600"
-                                            >
-                                                Modifier
+                                                className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"                                            >
+                                                <FaEdit size={20} />
+
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteConsultation(consultation.id, consultation.photos)}
                                                 className="text-red-500 hover:text-red-600"
                                             >
-                                                Supprimer
+                                                <FaTrash size={20} />
                                             </button>
                                         </div>
                                     </div>
@@ -640,11 +765,11 @@ function PatientDetails() {
 
             {/* Modal pour agrandir les photos */}
             {zoomedImage && (
-  <ImageModal
-    imageUrl={zoomedImage}
-    onClose={() => setZoomedImage(null)} // Fermer le modal
-  />
-)}
+                <ImageModal
+                    imageUrl={zoomedImage}
+                    onClose={() => setZoomedImage(null)} // Fermer le modal
+                />
+            )}
         </div>
     );
 }

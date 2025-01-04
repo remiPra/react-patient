@@ -5,6 +5,7 @@ import PatientDetails from './pages/PatientDetails';
 import NewPatient from './pages/NewPatient';
 import SearchPatient from './pages/SearchPatient';
 import MedicalAssistant from './pages/MedicalAssistant';
+import ImageContainer from './components/ImageContainer';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Route path="/patient/new" element={<NewPatient />} />
             <Route path="/patient/:id" element={<PatientDetails />} />
             <Route path="/pathology/:id" element={<MedicalAssistant />} />
+            <Route path='imageanalyser' element={<ImageContainer/>}/>
           </Routes>
         </div>
       </div>
